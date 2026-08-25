@@ -12,7 +12,6 @@ jugadores = [
 
 # Función para verificar si hay nombres repetidos en una lista de opciones
 def hay_repetidos(*args):
-    # Filtramos valores vacíos si los hubiera y comparamos el tamaño con un conjunto (set)
     elementos = [arg for arg in args if arg]
     return len(elementos) != len(set(elementos))
 
@@ -25,103 +24,79 @@ if "paso" not in st.session_state:
 puntos = st.session_state["puntos"]
 
 # ==========================================
-# PASO 1: CAPI DICE Y BINGO
+# PASO 1: CAPI DICE
 # ==========================================
 if st.session_state["paso"] == 1:
-    st.header("1️⃣ Fase Regular: Capi Dice y Bingo")
+    st.header("1️⃣ Fase Regular: Capi Dice")
     
-    st.subheader("Juego 1: Capi Dice")
-    c_1 = st.selectbox("1º Lugar (+3 pts)", jugadores, key="c1")
-    c_2 = st.selectbox("2º Lugar (+2 pts)", jugadores, key="c2")
-    c_3 = st.selectbox("3º Lugar (+1 pt)", jugadores, key="c3")
-    
-    st.subheader("Juego 2: Bingo")
-    b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", jugadores, key="b1")
-    b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", jugadores, key="b2")
-    b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", jugadores, key="b3")
+    c_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="c1")
+    c_2 = st.selectbox("2º Lugar (+2 pts)", [None] + jugadores, key="c2")
+    c_3 = st.selectbox("3º Lugar (+1 pt)", [None] + jugadores, key="c3")
 
     if st.button("Siguiente ➡️"):
-        # Validamos usando la función que creamos arriba
-        if hay_repetidos(c_1, c_2, c_3):
-            st.warning("⚠️ No puedes repetir jugadores en el podio de Capi Dice.")
-        elif hay_repetidos(b_1, b_2, b_3):
-            st.warning("⚠️ No puedes repetir jugadores en los ganadores de Bingo.")
+        if not c_1 or not c_2 or not c_3:
+            st.warning("⚠️ Por favor completa todos los puestos.")
+        elif hay_repetidos(c_1, c_2, c_3):
+            st.warning("⚠️ No puedes repetir jugadores en el podio.")
         else:
             puntos[c_1] += 3
             puntos[c_2] += 2
             puntos[c_3] += 1
-            puntos[b_1] += 3
-            puntos[b_2] += 3
-            puntos[b_3] += 3
             st.session_state["paso"] = 2
             st.rerun()
 
 # ==========================================
-# PASO 2: DUELOS 2VS2 (8 PAREJAS / 2 RONDAS CON FILTRADO)
+# PASO 2: BINGO
 # ==========================================
 elif st.session_state["paso"] == 2:
-    st.header("2️⃣ Fase Regular: Duelos 2vs2")
-    st.markdown("Arma los 4 enfrentamientos (Pareja A vs Pareja B) para cada juego. (Los jugadores ya seleccionados desaparecerán de las opciones):")
-
-    # --- JENGA ---
-    st.subheader("🪵 Jenga")
-    col_j1, col_j2 = st.columns(2)
-    with col_j1:
-        jenga_p1 = st.multiselect("Pareja 1 (Jenga)", jugadores, max_selections=2, key="j_p1")
+    st.header("2️⃣ Fase Regular: Bingo")
     
-    # Disponibles para Jenga P2 (excluimos lo que ya se eligió en Jenga P1)
-    disponibles_j2 = [j for j in jugadores if j not in jenga_p1]
-    with col_j2:
-        jenga_p2 = st.multiselect("Pareja 2 (Jenga)", disponibles_j2, max_selections=2, key="j_p2")
+    b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", [None] + jugadores, key="b1")
+    b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", [None] + jugadores, key="b2")
+    b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", [None] + jugadores, key="b3")
 
-    # --- MEMOTEST ---
-    st.subheader("🧠 Memotest")
-    # Disponibles para Memotest (excluimos todo lo de Jenga)
-    usados_hasta_jenga = jenga_p1 + jenga_p2
-    disponibles_memo1 = [j for j in jugadores if j not in usados_hasta_jenga]
+    if st.button("Siguiente ➡️"):
+        if not b_1 or not b_2 or not b_3:
+            st.warning("⚠️ Por favor completa todos los ganadores.")
+        elif hay_repetidos(b_1, b_2, b_3):
+            st.warning("⚠️ No puedes repetir jugadores en Bingo.")
+        else:
+            puntos[b_1] += 3
+            puntos[b_2] += 3
+            puntos[b_3] += 3
+            st.session_state["paso"] = 3
+            st.rerun()
+
+# ==========================================
+# PASO 3: DUELOS 2VS2 (8 PAREJAS / 2 RONDAS CON FILTRADO BIDIRECCIONAL)
+# ==========================================
+elif st.session_state["paso"] == 3:
+    st.header("3️⃣ Fase Regular: Duelos 2vs2")
+    st.markdown("Arma los 4 enfrentamientos (Pareja A vs Pareja B) para cada juego. (Los jugadores seleccionados en cualquier campo se bloquean automáticamente en los demás):")
+
+    # Recolectamos todas las selecciones actuales para filtrar dinámicamente
+    j_p1 = st.multiselect("Pareja 1 (Jenga)", jugadores, max_selections=2, key="j_p1")
+    j_p2 = st.multiselect("Pareja 2 (Jenga)", [j for j in jugadores if j not in j_p1], max_selections=2, key="j_p2")
     
-    col_m1, col_m2 = st.columns(2)
-    with col_m1:
-        memo_p1 = st.multiselect("Pareja 1 (Memotest)", disponibles_memo1, max_selections=2, key="m_p1")
+    usados_jenga = j_p1 + j_p2
+    memo_p1 = st.multiselect("Pareja 1 (Memotest)", [j for j in jugadores if j not in usados_jenga], max_selections=2, key="m_p1")
+    usados_memo1 = usados_jenga + memo_p1
+    memo_p2 = st.multiselect("Pareja 2 (Memotest)", [j for j in jugadores if j not in usados_memo1], max_selections=2, key="m_p2")
     
-    usados_hasta_memo1 = usados_hasta_jenga + memo_p1
-    disponibles_memo2 = [j for j in jugadores if j not in usados_hasta_memo1]
-    with col_m2:
-        memo_p2 = st.multiselect("Pareja 2 (Memotest)", disponibles_memo2, max_selections=2, key="m_p2")
-
-    # --- ¿QUIÉN ES QUIÉN? ---
-    st.subheader("🕵️ ¿Quién es Quién?")
-    usados_hasta_memo2 = usados_hasta_memo1 + memo_p2
-    disponibles_qeq1 = [j for j in jugadores if j not in usados_hasta_memo2]
-
-    col_q1, col_q2 = st.columns(2)
-    with col_q1:
-        qeq_p1 = st.multiselect("Pareja 1 (QEQ)", disponibles_qeq1, max_selections=2, key="q_p1")
+    usados_memo = usados_memo1 + memo_p2
+    qeq_p1 = st.multiselect("Pareja 1 (¿Quién es Quién?)", [j for j in jugadores if j not in usados_memo], max_selections=2, key="q_p1")
+    usados_qeq1 = usados_memo + qeq_p1
+    qeq_p2 = st.multiselect("Pareja 2 (¿Quién es Quién?)", [j for j in jugadores if j not in usados_qeq1], max_selections=2, key="q_p2")
     
-    usados_hasta_qeq1 = usados_hasta_memo2 + qeq_p1
-    disponibles_qeq2 = [j for j in jugadores if j not in usados_hasta_qeq1]
-    with col_q2:
-        qeq_p2 = st.multiselect("Pareja 2 (QEQ)", disponibles_qeq2, max_selections=2, key="q_p2")
-
-    # --- CONECTA 4 ---
-    st.subheader("🔴 Conecta 4")
-    usados_hasta_qeq2 = usados_hasta_qeq1 + qeq_p2
-    disponibles_c4_1 = [j for j in jugadores if j not in usados_hasta_qeq2]
-
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        c4_p1 = st.multiselect("Pareja 1 (Conecta 4)", disponibles_c4_1, max_selections=2, key="c_p1")
-    
-    usados_hasta_c4_1 = usados_hasta_qeq2 + c4_p1
-    disponibles_c4_2 = [j for j in jugadores if j not in usados_hasta_c4_1]
-    with col_c2:
-        c4_p2 = st.multiselect("Pareja 2 (Conecta 4)", disponibles_c4_2, max_selections=2, key="c_p2")
+    usados_qeq = usados_qeq1 + qeq_p2
+    c4_p1 = st.multiselect("Pareja 1 (Conecta 4)", [j for j in jugadores if j not in usados_qeq], max_selections=2, key="c_p1")
+    usados_c41 = usados_qeq + c4_p1
+    c4_p2 = st.multiselect("Pareja 2 (Conecta 4)", [j for j in jugadores if j not in usados_c41], max_selections=2, key="c_p2")
 
     st.markdown("---")
 
-    # Validamos que todas las parejas tengan exactamente 2 integrantes
     parejas_completas = (
-        len(jenga_p1) == 2 and len(jenga_p2) == 2 and
+        len(j_p1) == 2 and len(j_p2) == 2 and
         len(memo_p1) == 2 and len(memo_p2) == 2 and
         len(qeq_p1) == 2 and len(qeq_p2) == 2 and
         len(c4_p1) == 2 and len(c4_p2) == 2
@@ -132,15 +107,14 @@ elif st.session_state["paso"] == 2:
         
         col_g1, col_g2 = st.columns(2)
         with col_g1:
-            ganador_jenga = st.selectbox("Ganador Jenga", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{jenga_p1[0]} & {jenga_p1[1]}" if x == "Pareja 1" else f"{jenga_p2[0]} & {jenga_p2[1]}", key="gj_select")
+            ganador_jenga = st.selectbox("Ganador Jenga", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{j_p1[0]} & {j_p1[1]}" if x == "Pareja 1" else f"{j_p2[0]} & {j_p2[1]}", key="gj_select")
             ganador_memo = st.selectbox("Ganador Memotest", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{memo_p1[0]} & {memo_p1[1]}" if x == "Pareja 1" else f"{memo_p2[0]} & {memo_p2[1]}", key="gm_select")
         with col_g2:
             ganador_qeq = st.selectbox("Ganador ¿Quién es Quién?", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{qeq_p1[0]} & {qeq_p1[1]}" if x == "Pareja 1" else f"{qeq_p2[0]} & {qeq_p2[1]}", key="gq_select")
             ganador_c4 = st.selectbox("Ganador Conecta 4", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{c4_p1[0]} & {c4_p1[1]}" if x == "Pareja 1" else f"{c4_p2[0]} & {c4_p2[1]}", key="gc4_select")
 
-        # Separar ganadores y perdedores de la Ronda 1
-        g_jenga_pareja = jenga_p1 if ganador_jenga == "Pareja 1" else jenga_p2
-        p_jenga_pareja = jenga_p2 if ganador_jenga == "Pareja 1" else jenga_p1
+        g_jenga_pareja = j_p1 if ganador_jenga == "Pareja 1" else j_p2
+        p_jenga_pareja = j_p2 if ganador_jenga == "Pareja 1" else j_p1
 
         g_memo_pareja = memo_p1 if ganador_memo == "Pareja 1" else memo_p2
         p_memo_pareja = memo_p2 if ganador_memo == "Pareja 1" else memo_p1
@@ -152,186 +126,298 @@ elif st.session_state["paso"] == 2:
         p_c4_pareja = c4_p2 if ganador_c4 == "Pareja 1" else c4_p1
 
         st.markdown("---")
-        st.markdown("### 🔄 Ronda 2: Cruces de 2vs2 (Mismos 4 juegos)")
+        st.markdown("### 🔄 Ronda 2: Cruces de 2vs2")
 
         col_c1, col_c2 = st.columns(2)
         with col_c1:
-            st.markdown("**Jenga:** Ganador ¿Quién es Quién? vs Ganador Memotest")
+            st.markdown("**Jenga:** Ganador QEQ vs Ganador Memotest")
             opciones_jenga_r2 = [f"{g_qeq_pareja[0]} & {g_qeq_pareja[1]}", f"{g_memo_pareja[0]} & {g_memo_pareja[1]}"]
-            r_jenga_eleccion = st.selectbox("Ganador del cruce de Jenga (Ronda 2)", opciones_jenga_r2, key="rj")
+            r_jenga_eleccion = st.selectbox("Ganador Jenga (R2)", opciones_jenga_r2, key="rj")
             r_jenga = g_qeq_pareja if r_jenga_eleccion == opciones_jenga_r2[0] else g_memo_pareja
             
-            st.markdown("**Conecta 4:** Perdedor ¿Quién es Quién? vs Perdedor Memotest")
+            st.markdown("**Conecta 4:** Perdedor QEQ vs Perdedor Memotest")
             opciones_c4_r2 = [f"{p_qeq_pareja[0]} & {p_qeq_pareja[1]}", f"{p_memo_pareja[0]} & {p_memo_pareja[1]}"]
-            r_c4_eleccion = st.selectbox("Ganador del cruce de Conecta 4 (Ronda 2)", opciones_c4_r2, key="rc4")
+            r_c4_eleccion = st.selectbox("Ganador Conecta 4 (R2)", opciones_c4_r2, key="rc4")
             r_c4 = p_qeq_pareja if r_c4_eleccion == opciones_c4_r2[0] else p_memo_pareja
 
         with col_c2:
             st.markdown("**Memotest:** Ganador Jenga vs Ganador Conecta 4")
             opciones_memo_r2 = [f"{g_jenga_pareja[0]} & {g_jenga_pareja[1]}", f"{g_c4_pareja[0]} & {g_c4_pareja[1]}"]
-            r_memo_eleccion = st.selectbox("Ganador del cruce de Memotest (Ronda 2)", opciones_memo_r2, key="rm")
+            r_memo_eleccion = st.selectbox("Ganador Memotest (R2)", opciones_memo_r2, key="rm")
             r_memo = g_jenga_pareja if r_memo_eleccion == opciones_memo_r2[0] else g_c4_pareja
             
             st.markdown("**¿Quién es Quién?:** Perdedor Jenga vs Perdedor Conecta 4")
             opciones_qeq_r2 = [f"{p_jenga_pareja[0]} & {p_jenga_pareja[1]}", f"{p_c4_pareja[0]} & {p_c4_pareja[1]}"]
-            r_qeq_eleccion = st.selectbox("Ganador del cruce de QEQ (Ronda 2)", opciones_qeq_r2, key="rq")
+            r_qeq_eleccion = st.selectbox("Ganador QEQ (R2)", opciones_qeq_r2, key="rq")
             r_qeq = p_jenga_pareja if r_qeq_eleccion == opciones_qeq_r2[0] else p_c4_pareja
 
         if st.button("Siguiente ➡️"):
-            # Asignamos 2 puntos a ambos jugadores por cada victoria en la Ronda 1
-            parejas_ganadoras_r1 = [g_jenga_pareja, g_memo_pareja, g_qeq_pareja, g_c4_pareja]
-            for pareja in parejas_ganadoras_r1:
+            # Sumamos puntos Ronda 1 (+2 a cada integrante)
+            for pareja in [g_jenga_pareja, g_memo_pareja, g_qeq_pareja, g_c4_pareja]:
                 for jugador in pareja:
                     puntos[jugador] += 2
-
-            # Asignamos 2 puntos a ambos jugadores por cada victoria en la Ronda 2
-            parejas_ganadoras_r2 = [r_jenga, r_c4, r_memo, r_qeq]
-            for pareja in parejas_ganadoras_r2:
+            # Sumamos puntos Ronda 2 (+2 a cada integrante)
+            for pareja in [r_jenga, r_c4, r_memo, r_qeq]:
                 for jugador in pareja:
                     puntos[jugador] += 2
             
-            st.session_state["paso"] = 3
-            st.rerun()
-    else:
-        st.info("ℹ️ Completa exactamente 2 integrantes en cada una de las 8 parejas para desbloquear las selecciones de ganadores y la Ronda 2.")
-
-# ==========================================
-# PASO 3: TIC TAC Y DÍGALO CON MÍMICA
-# ==========================================
-elif st.session_state["paso"] == 3:
-    st.header("3️⃣ Fase Regular: Tic Tac y Mímica")
-    
-    st.subheader("Juego 4: Tic Tac")
-    tt_1 = st.selectbox("1º Lugar Tic Tac (+3 pts)", jugadores, key="tt1")
-    tt_2 = st.selectbox("2º Lugar Tic Tac (+2 pts)", jugadores, key="tt2")
-    tt_3 = st.selectbox("3º Lugar Tic Tac (+1 pt)", jugadores, key="tt3")
-    
-    st.subheader("Juego 5: Dígalo con Mímica (Equipos de 4)")
-    st.write("Selecciona los integrantes de cada podio (no repitas personas entre equipos):")
-    eq_1 = st.multiselect("Equipo 1º Puesto (+3 pts c/u):", jugadores, key="eq1")
-    eq_2 = st.multiselect("Equipo 2º Puesto (+2 pts c/u):", jugadores, key="eq2")
-    eq_3 = st.multiselect("Equipo 3º Puesto (+1 pt c/u):", jugadores, key="eq3")
-
-    if st.button("Siguiente ➡️"):
-        todos_mimica = eq_1 + eq_2 + eq_3
-        if hay_repetidos(tt_1, tt_2, tt_3):
-            st.warning("⚠️ No puedes repetir jugadores en el podio de Tic Tac.")
-        elif len(todos_mimica) != len(set(todos_mimica)):
-            st.warning("⚠️ Un jugador no puede estar en dos equipos distintos de Mímica a la vez.")
-        else:
-            puntos[tt_1] += 3; puntos[tt_2] += 2; puntos[tt_3] += 1
-            for m in eq_1: puntos[m] += 3
-            for m in eq_2: puntos[m] += 2
-            for m in eq_3: puntos[m] += 1
             st.session_state["paso"] = 4
             st.rerun()
+    else:
+        st.info("ℹ️ Asigna exactamente 2 integrantes distintos a cada una de las 8 parejas para continuar.")
 
 # ==========================================
-# PASO 4: EN UNA NOTA Y CORTE DE FASE 1
+# PASO 4: TIC TAC
 # ==========================================
 elif st.session_state["paso"] == 4:
-    st.header("4️⃣ Fase Regular: En Una Nota & Corte Top 8")
+    st.header("4️⃣ Fase Regular: Tic Tac")
     
-    st.subheader("Juego 6: En Una Nota")
-    n_1 = st.selectbox("1º Lugar (+5 pts)", jugadores, key="n1")
-    n_2 = st.selectbox("2º Lugar (+4 pts)", jugadores, key="n2")
-    n_3 = st.selectbox("3º Lugar (+3 pts)", jugadores, key="n3")
-    n_4 = st.selectbox("4º Lugar (+2 pts)", jugadores, key="n4")
-    n_5 = st.selectbox("5º Lugar (+1 pt)", jugadores, key="n5")
+    tt_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="tt1")
+    tt_2 = st.selectbox("2º Lugar (+2 pts)", [None] + jugadores, key="tt2")
+    tt_3 = st.selectbox("3º Lugar (+1 pt)", [None] + jugadores, key="tt3")
 
-    if st.button("📊 Calcular Puntos y Ver Tabla"):
-        if hay_repetidos(n_1, n_2, n_3, n_4, n_5):
-            st.warning("⚠️ No puedes repetir jugadores en el Top 5 de En Una Nota.")
+    if st.button("Siguiente ➡️"):
+        if not tt_1 or not tt_2 or not tt_3:
+            st.warning("⚠️ Completa los tres puestos.")
+        elif hay_repetidos(tt_1, tt_2, tt_3):
+            st.warning("⚠️ No puedes repetir jugadores en el podio.")
         else:
-            puntos[n_1] += 5; puntos[n_2] += 4; puntos[n_3] += 3; puntos[n_4] += 2; puntos[n_5] += 1
-            
-            # Guardamos temporalmente la tabla calculada en el session_state para mostrarla
-            tabla_f1 = sorted(puntos.items(), key=lambda x: x[1], reverse=True)
-            st.session_state["puntos_f1_temporal"] = tabla_f1
-            st.session_state["mostrar_tabla_f1"] = True
-
-    # Si ya se calcularon los puntos, mostramos el ranking completo antes de pasar a la fase 2
-    if st.session_state.get("mostrar_tabla_f1", False):
-        st.markdown("---")
-        st.subheader("📈 Tabla de Posiciones - Final Fase Regular")
-        st.write("Así quedaron los puntajes acumulados de todos los jugadores:")
-        
-        # Mostramos una tablita prolija
-        for i, (jugador, pts) in enumerate(st.session_state["puntos_f1_temporal"], 1):
-            st.write(f"**{i}º** {jugador}: **{pts} pts**")
-            
-        st.markdown("---")
-        if st.button("🚀 Avanzar a Fase 2 (Top 8)"):
-            tabla_f1 = st.session_state["puntos_f1_temporal"]
-            top_8 = [j[0] for j in tabla_f1[:8]]
-            st.session_state["top_8"] = top_8
-            st.session_state["puntos_f1"] = tabla_f1
-            
-            # Limpiamos variables temporales
-            st.session_state["mostrar_tabla_f1"] = False
+            puntos[tt_1] += 3; puntos[tt_2] += 2; puntos[tt_3] += 1
             st.session_state["paso"] = 5
             st.rerun()
 
 # ==========================================
-# PASO 5: FASE 2 (TUTTIFRUTTI, BARQUITO, JUICIO, UNO NO MERCY)
+# PASO 5: DÍGALO CON MÍMICA
 # ==========================================
 elif st.session_state["paso"] == 5:
-    top_8 = st.session_state["top_8"]
-    st.header("5️⃣ Fase 2: Juegos Decisivos")
-    st.write("Selecciona los podios del Top 8:")
+    st.header("5️⃣ Fase Regular: Dígalo con Mímica")
+    st.markdown("Selecciona los integrantes de cada equipo (se filtran automáticamente los ya seleccionados):")
 
-    st.subheader("Tuttifrutti")
-    tf_1 = st.selectbox("1º Tuttifrutti (+3 pts)", top_8, key="tf1")
-    tf_2 = st.selectbox("2º Tuttifrutti (+2 pts)", top_8, key="tf2")
-    tf_3 = st.selectbox("3º Tuttifrutti (+1 pt)", top_8, key="tf3")
+    eq_1 = st.multiselect("Equipo 1º Puesto (+3 pts c/u):", jugadores, key="eq1")
+    eq_2 = st.multiselect("Equipo 2º Puesto (+2 pts c/u):", [j for j in jugadores if j not in eq_1], key="eq2")
+    eq_3 = st.multiselect("Equipo 3º Puesto (+1 pt c/u):", [j for j in jugadores if j not in eq_1 + eq_2], key="eq3")
 
-    st.subheader("Barquito")
-    bar_1 = st.selectbox("1º Barquito (+3 pts)", top_8, key="bar1")
-    bar_2 = st.selectbox("2º Barquito (+2 pts)", top_8, key="bar2")
-    bar_3 = st.selectbox("3º Barquito (+1 pt)", top_8, key="bar3")
-
-    st.subheader("Juicio Matemático")
-    jm_1 = st.selectbox("1º Juicio Matemático (+5 pts)", top_8, key="jm1")
-    jm_2 = st.selectbox("2º Juicio Matemático (+4 pts)", top_8, key="jm2")
-    jm_3 = st.selectbox("3º Juicio Matemático (+3 pts)", top_8, key="jm3")
-    jm_4 = st.selectbox("4º Juicio Matemático (+2 pts)", top_8, key="jm4")
-    jm_5 = st.selectbox("5º Juicio Matemático (+1 pt)", top_8, key="jm5")
-
-    st.subheader("UNO No Mercy")
-    u_1 = st.selectbox("1º UNO No Mercy (+3 pts)", top_8, key="u1")
-    u_2 = st.selectbox("2º UNO No Mercy (+2 pts)", top_8, key="u2")
-    u_3 = st.selectbox("3º UNO No Mercy (+1 pt)", top_8, key="u3")
-
-    if st.button("⚔️ Ver Clasificados a Semifinales y Final"):
-        if hay_repetidos(tf_1, tf_2, tf_3) or hay_repetidos(bar_1, bar_2, bar_3) or hay_repetidos(jm_1, jm_2, jm_3, jm_4, jm_5) or hay_repetidos(u_1, u_2, u_3):
-            st.warning("⚠️ Hay jugadores repetidos en los podios de la Fase 2. Revisa las selecciones.")
+    if st.button("Siguiente ➡️"):
+        if not eq_1 or not eq_2 or not eq_3:
+            st.warning("⚠️ Asegúrate de completar los equipos.")
         else:
-            puntos_f2 = {j: dict(st.session_state["puntos_f1"])[j] for j in top_8}
-            puntos_f2[tf_1] += 3; puntos_f2[tf_2] += 2; puntos_f2[tf_3] += 1
-            puntos_f2[bar_1] += 3; puntos_f2[bar_2] += 2; puntos_f2[bar_3] += 1
-            puntos_f2[jm_1] += 5; puntos_f2[jm_2] += 4; puntos_f2[jm_3] += 3; puntos_f2[jm_4] += 2; puntos_f2[jm_5] += 1
-            puntos_f2[u_1] += 3; puntos_f2[u_2] += 2; puntos_f2[u_3] += 1
-
-            ranking_f2 = sorted(puntos_f2.items(), key=lambda x: x[1], reverse=True)
-            st.session_state["finalista_directo"] = ranking_f2[0][0]
-            st.session_state["semifinalistas"] = [j[0] for j in ranking_f2[1:5]]
-            
+            for m in eq_1: puntos[m] += 3
+            for m in eq_2: puntos[m] += 2
+            for m in eq_3: puntos[m] += 1
             st.session_state["paso"] = 6
             st.rerun()
 
 # ==========================================
-# PASO 6: SEMIFINAL (LIAR'S BAR) Y GRAN FINAL
+# PASO 6: EN UNA NOTA Y CORTE DE FASE 1
 # ==========================================
 elif st.session_state["paso"] == 6:
+    st.header("6️⃣ Fase Regular: En Una Nota")
+    
+    n_1 = st.selectbox("1º Lugar (+5 pts)", [None] + jugadores, key="n1")
+    n_2 = st.selectbox("2º Lugar (+4 pts)", [None] + jugadores, key="n2")
+    n_3 = st.selectbox("3º Lugar (+3 pts)", [None] + jugadores, key="n3")
+    n_4 = st.selectbox("4º Lugar (+2 pts)", [None] + jugadores, key="n4")
+    n_5 = st.selectbox("5º Lugar (+1 pt)", [None] + jugadores, key="n5")
+
+    if st.button("📊 Calcular Puntos y Ver Tabla de Fase 1"):
+        if not n_1 or not n_2 or not n_3 or not n_4 or not n_5:
+            st.warning("⚠️ Completa los 5 puestos.")
+        elif hay_repetidos(n_1, n_2, n_3, n_4, n_5):
+            st.warning("⚠️ No puedes repetir jugadores.")
+        else:
+            puntos[n_1] += 5; puntos[n_2] += 4; puntos[n_3] += 3; puntos[n_4] += 2; puntos[n_5] += 1
+            
+            tabla_f1 = sorted(puntos.items(), key=lambda x: x[1], reverse=True)
+            st.session_state["puntos_f1_temporal"] = tabla_f1
+            st.session_state["mostrar_tabla_f1"] = True
+
+    if st.session_state.get("mostrar_tabla_f1", False):
+        st.markdown("---")
+        st.subheader("📈 Tabla de Posiciones - Final Fase Regular")
+        tabla = st.session_state["puntos_f1_temporal"]
+        
+        for i, (jugador, pts) in enumerate(tabla, 1):
+            st.write(f"**{i}º** {jugador}: **{pts} pts**")
+            
+        # Lógica de clasificación y detección de empates en el puesto 8
+        octavo_puntaje = tabla[7][1]
+        candidatos_corte = [j for j, p in tabla if p >= octavo_puntaje]
+        clasificados_fijos = [j for j, p in tabla if p > octavo_puntaje][:7]
+        empatados_octavo = [j for j, p in tabla if p == octavo_puntaje]
+        
+        st.markdown("---")
+        if len(candidatos_corte) > 8:
+            st.warning(f"⚠️ ¡Hay un empate en el corte del Top 8! Se necesitan definir los clasificados finales.")
+            st.write(f"Jugadores ya clasificados de forma directa (Top 7): **{', '.join(clasificados_fijos)}**")
+            st.write(f"Jugadores empatados peleando por los puestos restantes: **{', '.join(empatados_octavo)}**")
+            
+            vacantes = 8 - len(clasificados_fijos)
+            elegidos_desempate = st.multiselect(f"Selecciona a los {vacantes} jugador(es) que avanzan por desempate:", empatados_octavo, max_selections=vacantes)
+            
+            if st.button("🚀 Confirmar Top 8 y Avanzar a Fase 2"):
+                if len(elegidos_desempate) != vacantes:
+                    st.error(f"Debes seleccionar exactamente {vacantes} jugador(es).")
+                else:
+                    top_8_final = clasificados_fijos + elegidos_desempate
+                    st.session_state["top_8"] = top_8_final
+                    st.session_state["puntos_f1"] = tabla
+                    st.session_state["mostrar_tabla_f1"] = False
+                    st.session_state["paso"] = 7
+                    st.rerun()
+        else:
+            if st.button("🚀 Avanzar a Fase 2 (Top 8)"):
+                top_8_final = [j[0] for j in tabla[:8]]
+                st.session_state["top_8"] = top_8_final
+                st.session_state["puntos_f1"] = tabla
+                st.session_state["mostrar_tabla_f1"] = False
+                st.session_state["paso"] = 7
+                st.rerun()
+
+# ==========================================
+# PASO 7: TUTTIFRUTTI
+# ==========================================
+elif st.session_state["paso"] == 7:
+    top_8 = st.session_state["top_8"]
+    st.header("7️⃣ Fase 2: Tuttifrutti")
+    
+    tf_1 = st.selectbox("1º Tuttifrutti (+3 pts)", [None] + top_8, key="tf1")
+    tf_2 = st.selectbox("2º Tuttifrutti (+2 pts)", [None] + top_8, key="tf2")
+    tf_3 = st.selectbox("3º Tuttifrutti (+1 pt)", [None] + top_8, key="tf3")
+
+    if st.button("Siguiente ➡️"):
+        if not tf_1 or not tf_2 or not tf_3:
+            st.warning("⚠️ Completa el podio.")
+        elif hay_repetidos(tf_1, tf_2, tf_3):
+            st.warning("⚠️ No repitas jugadores.")
+        else:
+            puntos[tf_1] += 3; puntos[tf_2] += 2; puntos[tf_3] += 1
+            st.session_state["paso"] = 8
+            st.rerun()
+
+# ==========================================
+# PASO 8: BARQUITO
+# ==========================================
+elif st.session_state["paso"] == 8:
+    top_8 = st.session_state["top_8"]
+    st.header("8️⃣ Fase 2: Barquito")
+    
+    bar_1 = st.selectbox("1º Barquito (+3 pts)", [None] + top_8, key="bar1")
+    bar_2 = st.selectbox("2º Barquito (+2 pts)", [None] + top_8, key="bar2")
+    bar_3 = st.selectbox("3º Barquito (+1 pt)", [None] + top_8, key="bar3")
+
+    if st.button("Siguiente ➡️"):
+        if not bar_1 or not bar_2 or not bar_3:
+            st.warning("⚠️ Completa el podio.")
+        elif hay_repetidos(bar_1, bar_2, bar_3):
+            st.warning("⚠️ No repitas jugadores.")
+        else:
+            puntos[bar_1] += 3; puntos[bar_2] += 2; puntos[bar_3] += 1
+            st.session_state["paso"] = 9
+            st.rerun()
+
+# ==========================================
+# PASO 9: JUICIO MATEMÁTICO
+# ==========================================
+elif st.session_state["paso"] == 9:
+    top_8 = st.session_state["top_8"]
+    st.header("9️⃣ Fase 2: Juicio Matemático")
+    
+    jm_1 = st.selectbox("1º Juicio Matemático (+5 pts)", [None] + top_8, key="jm1")
+    jm_2 = st.selectbox("2º Juicio Matemático (+4 pts)", [None] + top_8, key="jm2")
+    jm_3 = st.selectbox("3º Juicio Matemático (+3 pts)", [None] + top_8, key="jm3")
+    jm_4 = st.selectbox("4º Juicio Matemático (+2 pts)", [None] + top_8, key="jm4")
+    jm_5 = st.selectbox("5º Juicio Matemático (+1 pt)", [None] + top_8, key="jm5")
+
+    if st.button("Siguiente ➡️"):
+        if not jm_1 or not jm_2 or not jm_3 or not jm_4 or not jm_5:
+            st.warning("⚠️ Completa los 5 puestos.")
+        elif hay_repetidos(jm_1, jm_2, jm_3, jm_4, jm_5):
+            st.warning("⚠️ No repitas jugadores.")
+        else:
+            puntos[jm_1] += 5; puntos[jm_2] += 4; puntos[jm_3] += 3; puntos[jm_4] += 2; puntos[jm_5] += 1
+            st.session_state["paso"] = 10
+            st.rerun()
+
+# ==========================================
+# PASO 10: UNO NO MERCY
+# ==========================================
+elif st.session_state["paso"] == 10:
+    top_8 = st.session_state["top_8"]
+    st.header("🔟 Fase 2: UNO No Mercy")
+    
+    u_1 = st.selectbox("1º UNO No Mercy (+3 pts)", [None] + top_8, key="u1")
+    u_2 = st.selectbox("2º UNO No Mercy (+2 pts)", [None] + top_8, key="u2")
+    u_3 = st.selectbox("3º UNO No Mercy (+1 pt)", [None] + top_8, key="u3")
+
+    if st.button("📊 Ver Tabla General y Definir Semifinalistas"):
+        if not u_1 or not u_2 or not u_3:
+            st.warning("⚠️ Completa el podio.")
+        elif hay_repetidos(u_1, u_2, u_3):
+            st.warning("⚠️ No repitas jugadores.")
+        else:
+            puntos[u_1] += 3; puntos[u_2] += 2; puntos[u_3] += 1
+            
+            tabla_f2 = sorted(puntos.items(), key=lambda x: x[1], reverse=True)
+            st.session_state["puntos_f2_temporal"] = tabla_f2
+            st.session_state["mostrar_tabla_f2"] = True
+
+    if st.session_state.get("mostrar_tabla_f2", False):
+        st.markdown("---")
+        st.subheader("📈 Tabla General Actualizada (Fase 2)")
+        tabla = st.session_state["puntos_f2_temporal"]
+        
+        for i, (jugador, pts) in enumerate(tabla, 1):
+            st.write(f"**{i}º** {jugador}: **{pts} pts**")
+            
+        # Lógica de desempate en el corte para Semifinales/Finalista directo (Top 5 en total: 1 directo + 4 semifinalistas)
+        # El puesto clave es el 5to (índice 4)
+        quinto_puntaje = tabla[4][1]
+        candidatos_corte_f2 = [j for j, p in tabla if p >= quinto_puntaje]
+        clasificados_fijos_f2 = [j for j, p in tabla if p > quinto_puntaje][:4]
+        empatados_quinto = [j for j, p in tabla if p == quinto_puntaje]
+        
+        st.markdown("---")
+        if len(candidatos_corte_f2) > 5:
+            st.warning(f"⚠️ ¡Hay un empate en el corte del Top 5! Se debe definir quién avanza.")
+            st.write(f"Jugadores asegurados arriba del corte: **{', '.join(clasificados_fijos_f2)}**")
+            st.write(f"Jugadores empatados disputando el último lugar del Top 5: **{', '.join(empatados_quinto)}**")
+            
+            vacantes_f2 = 5 - len(clasificados_fijos_f2)
+            elegidos_desempate_f2 = st.multiselect(f"Selecciona a los {vacantes_f2} jugador(es) que completan el Top 5:", empatados_quinto, max_selections=vacantes_f2)
+            
+            if st.button("🚀 Continuar a Semifinal y Gran Final"):
+                if len(elegidos_desempate_f2) != vacantes_f2:
+                    st.error(f"Debes seleccionar exactamente {vacantes_f2} jugador(es).")
+                else:
+                    top_5_final = clasificados_fijos_f2 + elegidos_desempate_f2
+                    # El 1º del Top 5 es el finalista directo, los otros 4 van a semifinales
+                    st.session_state["finalista_directo"] = top_5_final[0]
+                    st.session_state["semifinalistas"] = top_5_final[1:]
+                    st.session_state["mostrar_tabla_f2"] = False
+                    st.session_state["paso"] = 11
+                    st.rerun()
+        else:
+            if st.button("🚀 Continuar a Semifinal y Gran Final"):
+                top_5_final = [j[0] for j in tabla[:5]]
+                st.session_state["finalista_directo"] = top_5_final[0]
+                st.session_state["semifinalistas"] = top_5_final[1:]
+                st.session_state["mostrar_tabla_f2"] = False
+                st.session_state["paso"] = 11
+                st.rerun()
+
+# ==========================================
+# PASO 11: SEMIFINAL & GRAN FINAL
+# ==========================================
+elif st.session_state["paso"] == 11:
     finalista_directo = st.session_state["finalista_directo"]
     semifinalistas = st.session_state["semifinalistas"]
 
-    st.header("6️⃣ Etapa Final: Semifinal & Gran Final")
-    st.markdown(f"🌟 **Pase directo a la Final:** **{finalista_directo}**")
+    st.header("1️⃣1️⃣ Etapa Final: Semifinal & Gran Final")
+    st.markdown(f"🌟 **Pase directo a la Gran Final:** **{finalista_directo}**")
     
     st.subheader("⚔️ Semifinal: Liar's Bar")
     st.write(f"Candidatos: {', '.join(semifinalistas)}")
-    clasificados_liars = st.multiselect("Selecciona a los 2 que pasan a la final:", semifinalistas, max_selections=2)
+    clasificados_liars = st.multiselect("Selecciona a los 2 que pasan a la Gran Final:", semifinalistas, max_selections=2)
 
     if len(clasificados_liars) == 2:
         st.markdown("---")
@@ -345,7 +431,14 @@ elif st.session_state["paso"] == 6:
             st.balloons()
             st.success(f"¡Listo! Tu predicción indica que **{campeon}** gana el torneo.")
             
-    # Botón de reinicio fuera del botón de guardar para que funcione bien
+            # Mostramos la tabla general completa de puntajes al final
+            st.markdown("---")
+            st.subheader("📊 Posiciones Finales Estimadas")
+            tabla_final_total = sorted(puntos.items(), key=lambda x: x[1], reverse=True)
+            for i, (jugador, pts) in enumerate(tabla_final_total, 1):
+                st.write(f"**{i}º** {jugador}: **{pts} pts**")
+
+    # Botón de reinicio
     st.markdown("---")
     if st.button("🔄 Reiniciar y armar otra predicción"):
         st.session_state["paso"] = 1
