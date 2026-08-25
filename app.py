@@ -41,10 +41,20 @@ if st.session_state["paso"] == 1:
     b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", jugadores, key="b3")
 
     if st.button("Siguiente ➡️"):
-        puntos[c_1] += 3; puntos[c_2] += 2; puntos[c_3] += 1
-        puntos[b_1] += 3; puntos[b_2] += 3; puntos[b_3] += 3
-        st.session_state["paso"] = 2
-        st.rerun()
+        # Validamos usando la función que creamos arriba
+        if hay_repetidos(c_1, c_2, c_3):
+            st.warning("⚠️ No puedes repetir jugadores en el podio de Capi Dice.")
+        elif hay_repetidos(b_1, b_2, b_3):
+            st.warning("⚠️ No puedes repetir jugadores en los ganadores de Bingo.")
+        else:
+            puntos[c_1] += 3
+            puntos[c_2] += 2
+            puntos[c_3] += 1
+            puntos[b_1] += 3
+            puntos[b_2] += 3
+            puntos[b_3] += 3
+            st.session_state["paso"] = 2
+            st.rerun()
 
 # ==========================================
 # PASO 2: DUELOS 2VS2 (4 JUEGOS Y CRUCES)
