@@ -57,50 +57,76 @@ if st.session_state["paso"] == 1:
             st.rerun()
 
 # ==========================================
-# PASO 2: DUELOS 2VS2 (4 JUEGOS Y CRUCES)
+# PASO 2: DUELOS 2VS2 (ARMADO DE EQUIPOS Y CRUCES)
 # ==========================================
 elif st.session_state["paso"] == 2:
     st.header("2️⃣ Fase Regular: Duelos 2vs2")
-    st.markdown("Selecciona los ganadores y perdedores de la 1ª ronda:")
-    
-    col_d1, col_d2 = st.columns(2)
-    with col_d1:
-        g_jenga = st.selectbox("Ganador Jenga", jugadores, key="gj")
-        g_memo = st.selectbox("Ganador Memotest", jugadores, key="gm")
-        g_qeq = st.selectbox("Ganador ¿Quién es Quién?", jugadores, key="gq")
-        g_c4 = st.selectbox("Ganador Conecta 4", jugadores, key="gc4")
-    with col_d2:
-        p_jenga = st.selectbox("Perdedor Jenga", jugadores, key="pj")
-        p_memo = st.selectbox("Perdedor Memotest", jugadores, key="pm")
-        p_qeq = st.selectbox("Perdedor ¿Quién es Quién?", jugadores, key="pq")
-        p_c4 = st.selectbox("Perdedor Conecta 4", jugadores, key="pc4")
+    st.markdown("Paso 1: Selecciona las 4 parejas (equipos de 2) que se enfrentarán:")
+
+    col_e1, col_e2 = st.columns(2)
+    with col_e1:
+        eq_jenga = st.multiselect("Pareja para Jenga (2 jugadores)", jugadores, max_selections=2, key="eq_j")
+        eq_memo = st.multiselect("Pareja para Memotest (2 jugadores)", jugadores, max_selections=2, key="eq_m")
+    with col_e2:
+        eq_qeq = st.multiselect("Pareja para ¿Quién es Quién? (2 jugadores)", jugadores, max_selections=2, key="eq_q")
+        eq_c4 = st.multiselect("Pareja para Conecta 4 (2 jugadores)", jugadores, key="eq_c")
 
     st.markdown("---")
-    st.markdown("### 🔄 2ª Ronda de Duelos (Cruces)")
-    
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        st.markdown("**Jenga:** Ganador QEQ vs Ganador Memo")
-        r_jenga = st.selectbox("Ganador de este cruce de Jenga", [g_qeq, g_memo], key="rj")
-        
-        st.markdown("**Conecta 4:** Perdedor QEQ vs Perdedor Memo")
-        r_c4 = st.selectbox("Ganador de este cruce de Conecta 4", [p_qeq, p_memo], key="rc4")
-    with col_c2:
-        st.markdown("**Memotest:** Ganador Jenga vs Ganador C4")
-        r_memo = st.selectbox("Ganador de este cruce de Memotest", [g_jenga, g_c4], key="rm")
-        
-        st.markdown("**¿Quién es Quién?:** Perdedor Jenga vs Perdedor C4")
-        r_qeq = st.selectbox("Ganador de este cruce de QEQ", [p_jenga, p_c4], key="rq")
+    st.markdown("Paso 2: Predice los ganadores y perdedores de estos enfrentamientos en la 1ª Ronda:")
 
-    if st.button("Siguiente ➡️"):
-        # Validar que un mismo jugador no haya sido puesto como ganador y perdedor del mismo juego
-        if (g_jenga == p_jenga) or (g_memo == p_memo) or (g_qeq == p_qeq) or (g_c4 == p_c4):
-            st.warning("⚠️ Un jugador no puede ser ganador y perdedor al mismo tiempo en el mismo juego.")
-        else:
-            for ganador_cruce in [r_jenga, r_c4, r_memo, r_qeq]:
-                if ganador_cruce: puntos[ganador_cruce] += 3
-            st.session_state["paso"] = 3
-            st.rerun()
+    # Validamos que los equipos estén completos para habilitar las selecciones de ganadores/perdedores
+    if len(eq_jenga) == 2 and len(eq_memo) == 2 and len(eq_qeq) == 2 and len(eq_c4) == 2:
+        
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            g_jenga = st.selectbox("Ganador Jenga", eq_jenga, key="gj")
+            g_memo = st.selectbox("Ganador Memotest", eq_memo, key="gm")
+            g_qeq = st.selectbox("Ganador ¿Quién es Quién?", eq_qeq, key="gq")
+            g_c4 = st.selectbox("Ganador Conecta 4", eq_c4, key="gc4")
+        with col_d2:
+            # El perdedor es automáticamente el otro miembro de la pareja
+            p_jenga = [j for j in eq_jenga if j != g_jenga][0]
+            st.info(f"Perdedor Jenga: **{p_jenga}**")
+            
+            p_memo = [j for j in eq_memo if j != g_memo][0]
+            st.info(f"Perdedor Memotest: **{p_memo}**")
+            
+            p_qeq = [j for j in eq_qeq if j != g_qeq][0]
+            st.info(f"Perdedor ¿Quién es Quién?: **{p_qeq}**")
+            
+            p_c4 = [j for j in eq_c4 if j != g_c4][0]
+            st.info(f"Perdedor Conecta 4: **{p_c4}**")
+
+        st.markdown("---")
+        st.markdown("### 🔄 2ª Ronda de Duelos (Cruces)")
+        
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown("**Jenga:** Ganador QEQ vs Ganador Memo")
+            r_jenga = st.selectbox("Ganador de este cruce de Jenga", [g_qeq, g_memo], key="rj")
+            
+            st.markdown("**Conecta 4:** Perdedor QEQ vs Perdedor Memo")
+            r_c4 = st.selectbox("Ganador de este cruce de Conecta 4", [p_qeq, p_memo], key="rc4")
+        with col_c2:
+            st.markdown("**Memotest:** Ganador Jenga vs Ganador C4")
+            r_memo = st.selectbox("Ganador de este cruce de Memotest", [g_jenga, g_c4], key="rm")
+            
+            st.markdown("**¿Quién es Quién?:** Perdedor Jenga vs Perdedor C4")
+            r_qeq = st.selectbox("Ganador de este cruce de QEQ", [p_jenga, p_c4], key="rq")
+
+        if st.button("Siguiente ➡️"):
+            # Validación para asegurar que no se repitan jugadores en los ganadores de cruces si aplica
+            todos_equipos = eq_jenga + eq_memo + eq_qeq + eq_c4
+            if len(todos_equipos) != len(set(todos_equipos)):
+                st.warning("⚠️ Hay jugadores repetidos entre los distintos equipos de 2vs2. Cada jugador debe estar en un solo equipo.")
+            else:
+                # Otorgamos puntos por los cruces ganados en la ronda 2
+                for ganador_cruce in [r_jenga, r_c4, r_memo, r_qeq]:
+                    if ganador_cruce: puntos[ganador_cruce] += 3
+                st.session_state["paso"] = 3
+                st.rerun()
+    else:
+        st.warning("⚠️ Por favor, completa exactamente 2 jugadores en cada uno de los 4 equipos para continuar.")
 
 # ==========================================
 # PASO 3: TIC TAC Y DÍGALO CON MÍMICA
