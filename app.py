@@ -35,7 +35,7 @@ if st.session_state["paso"] == 1:
     c_2 = st.selectbox("2º Lugar (+2 pts)", jugadores, key="c2")
     c_3 = st.selectbox("3º Lugar (+1 pt)", jugadores, key="c3")
     
-    st.subheader("Juego 2: Bingo (¡3 ganadores de 3 pts!)")
+    st.subheader("Juego 2: Bingo")
     b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", jugadores, key="b1")
     b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", jugadores, key="b2")
     b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", jugadores, key="b3")
@@ -216,56 +216,75 @@ elif st.session_state["paso"] == 3:
 elif st.session_state["paso"] == 4:
     st.header("4️⃣ Fase Regular: En Una Nota & Corte Top 8")
     
-    st.subheader("Juego 6: En Una Nota (Top 5)")
+    st.subheader("Juego 6: En Una Nota")
     n_1 = st.selectbox("1º Lugar (+5 pts)", jugadores, key="n1")
     n_2 = st.selectbox("2º Lugar (+4 pts)", jugadores, key="n2")
     n_3 = st.selectbox("3º Lugar (+3 pts)", jugadores, key="n3")
     n_4 = st.selectbox("4º Lugar (+2 pts)", jugadores, key="n4")
     n_5 = st.selectbox("5º Lugar (+1 pt)", jugadores, key="n5")
 
-    if st.button("📊 Calcular Top 8 y Avanzar a Fase 2"):
+    if st.button("📊 Calcular Puntos y Ver Tabla"):
         if hay_repetidos(n_1, n_2, n_3, n_4, n_5):
             st.warning("⚠️ No puedes repetir jugadores en el Top 5 de En Una Nota.")
         else:
             puntos[n_1] += 5; puntos[n_2] += 4; puntos[n_3] += 3; puntos[n_4] += 2; puntos[n_5] += 1
             
+            # Guardamos temporalmente la tabla calculada en el session_state para mostrarla
             tabla_f1 = sorted(puntos.items(), key=lambda x: x[1], reverse=True)
+            st.session_state["puntos_f1_temporal"] = tabla_f1
+            st.session_state["mostrar_tabla_f1"] = True
+
+    # Si ya se calcularon los puntos, mostramos el ranking completo antes de pasar a la fase 2
+    if st.session_state.get("mostrar_tabla_f1", False):
+        st.markdown("---")
+        st.subheader("📈 Tabla de Posiciones - Final Fase Regular")
+        st.write("Así quedaron los puntajes acumulados de todos los jugadores:")
+        
+        # Mostramos una tablita prolija
+        for i, (jugador, pts) in enumerate(st.session_state["puntos_f1_temporal"], 1):
+            st.write(f"**{i}º** {jugador}: **{pts} pts**")
+            
+        st.markdown("---")
+        if st.button("🚀 Avanzar a Fase 2 (Top 8)"):
+            tabla_f1 = st.session_state["puntos_f1_temporal"]
             top_8 = [j[0] for j in tabla_f1[:8]]
             st.session_state["top_8"] = top_8
             st.session_state["puntos_f1"] = tabla_f1
             
+            # Limpiamos variables temporales
+            st.session_state["mostrar_tabla_f1"] = False
             st.session_state["paso"] = 5
             st.rerun()
 
 # ==========================================
-# PASO 5: FASE 2 (TUTTIFRUTTI, BARQUITO, JUICIO, UNO)
+# PASO 5: FASE 2 (TUTTIFRUTTI, BARQUITO, JUICIO, UNO NO MERCY)
 # ==========================================
 elif st.session_state["paso"] == 5:
     top_8 = st.session_state["top_8"]
     st.header("5️⃣ Fase 2: Juegos Decisivos")
     st.write("Selecciona los podios del Top 8:")
 
-    st.subheader("Tuttifrutti (3 al 1º, 2 al 2º, 1 al 3º)")
-    tf_1 = st.selectbox("1º Tuttifrutti", top_8, key="tf1")
-    tf_2 = st.selectbox("2º Tuttifrutti", top_8, key="tf2")
-    tf_3 = st.selectbox("3º Tuttifrutti", top_8, key="tf3")
+    st.subheader("Tuttifrutti")
+    tf_1 = st.selectbox("1º Tuttifrutti (+3 pts)", top_8, key="tf1")
+    tf_2 = st.selectbox("2º Tuttifrutti (+2 pts)", top_8, key="tf2")
+    tf_3 = st.selectbox("3º Tuttifrutti (+1 pt)", top_8, key="tf3")
 
-    st.subheader("Barquito (3 al 1º, 2 al 2º, 1 al 3º)")
-    bar_1 = st.selectbox("1º Barquito", top_8, key="bar1")
-    bar_2 = st.selectbox("2º Barquito", top_8, key="bar2")
-    bar_3 = st.selectbox("3º Barquito", top_8, key="bar3")
+    st.subheader("Barquito")
+    bar_1 = st.selectbox("1º Barquito (+3 pts)", top_8, key="bar1")
+    bar_2 = st.selectbox("2º Barquito (+2 pts)", top_8, key="bar2")
+    bar_3 = st.selectbox("3º Barquito (+1 pt)", top_8, key="bar3")
 
-    st.subheader("Juicio Matemático (Top 5: 5, 4, 3, 2, 1 pts)")
-    jm_1 = st.selectbox("1º Juicio Matemático", top_8, key="jm1")
-    jm_2 = st.selectbox("2º Juicio Matemático", top_8, key="jm2")
-    jm_3 = st.selectbox("3º Juicio Matemático", top_8, key="jm3")
-    jm_4 = st.selectbox("4º Juicio Matemático", top_8, key="jm4")
-    jm_5 = st.selectbox("5º Juicio Matemático", top_8, key="jm5")
+    st.subheader("Juicio Matemático")
+    jm_1 = st.selectbox("1º Juicio Matemático (+5 pts)", top_8, key="jm1")
+    jm_2 = st.selectbox("2º Juicio Matemático (+4 pts)", top_8, key="jm2")
+    jm_3 = st.selectbox("3º Juicio Matemático (+3 pts)", top_8, key="jm3")
+    jm_4 = st.selectbox("4º Juicio Matemático (+2 pts)", top_8, key="jm4")
+    jm_5 = st.selectbox("5º Juicio Matemático (+1 pt)", top_8, key="jm5")
 
-    st.subheader("UNO - Juego 10 (3 al 1º, 2 al 2º, 1 al 3º)")
-    u_1 = st.selectbox("1º UNO", top_8, key="u1")
-    u_2 = st.selectbox("2º UNO", top_8, key="u2")
-    u_3 = st.selectbox("3º UNO", top_8, key="u3")
+    st.subheader("UNO No Mercy")
+    u_1 = st.selectbox("1º UNO No Mercy (+3 pts)", top_8, key="u1")
+    u_2 = st.selectbox("2º UNO No Mercy (+2 pts)", top_8, key="u2")
+    u_3 = st.selectbox("3º UNO No Mercy (+1 pt)", top_8, key="u3")
 
     if st.button("⚔️ Ver Clasificados a Semifinales y Final"):
         if hay_repetidos(tf_1, tf_2, tf_3) or hay_repetidos(bar_1, bar_2, bar_3) or hay_repetidos(jm_1, jm_2, jm_3, jm_4, jm_5) or hay_repetidos(u_1, u_2, u_3):
@@ -285,7 +304,7 @@ elif st.session_state["paso"] == 5:
             st.rerun()
 
 # ==========================================
-# PASO 6: SEMIFINAL (LIAR'S BAR) Y GRAN FINAL (PASAPALABRA)
+# PASO 6: SEMIFINAL (LIAR'S BAR) Y GRAN FINAL
 # ==========================================
 elif st.session_state["paso"] == 6:
     finalista_directo = st.session_state["finalista_directo"]
@@ -300,7 +319,7 @@ elif st.session_state["paso"] == 6:
 
     if len(clasificados_liars) == 2:
         st.markdown("---")
-        st.subheader("🏆 Gran Final: Pasapalabra")
+        st.subheader("🏆 Gran Final")
         participantes_final = [finalista_directo] + clasificados_liars
         st.write(f"Finalistas: **{', '.join(participantes_final)}**")
         
