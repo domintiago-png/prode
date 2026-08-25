@@ -10,6 +10,12 @@ jugadores = [
     "Santino", "Joa", "Mariano", "Victoria", "Mía", "Agustín", "Juan", "Mora"
 ]
 
+# Función para verificar si hay nombres repetidos en una lista de opciones
+def hay_repetidos(*args):
+    # Filtramos valores vacíos si los hubiera y comparamos el tamaño con un conjunto (set)
+    elementos = [arg for arg in args if arg]
+    return len(elementos) != len(set(elementos))
+
 # Inicializamos el sistema de puntos y el control de pasos en la sesión de Streamlit
 if "puntos" not in st.session_state:
     st.session_state["puntos"] = {j: 0 for j in jugadores}
