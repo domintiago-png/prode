@@ -57,76 +57,114 @@ if st.session_state["paso"] == 1:
             st.rerun()
 
 # ==========================================
-# PASO 2: DUELOS 2VS2 (ARMADO DE EQUIPOS Y CRUCES)
+# PASO 2: DUELOS 2VS2 (8 PAREJAS / 4 ENFRENTAMIENTOS)
 # ==========================================
 elif st.session_state["paso"] == 2:
     st.header("2️⃣ Fase Regular: Duelos 2vs2")
-    st.markdown("Paso 1: Selecciona las 4 parejas (equipos de 2) que se enfrentarán:")
+    st.markdown("Arma los 4 enfrentamientos (Pareja A vs Pareja B) para cada juego. (¡Asegúrate de usar a los 16 jugadores sin repetir!):")
 
-    col_e1, col_e2 = st.columns(2)
-    with col_e1:
-        eq_jenga = st.multiselect("Pareja para Jenga (2 jugadores)", jugadores, max_selections=2, key="eq_j")
-        eq_memo = st.multiselect("Pareja para Memotest (2 jugadores)", jugadores, max_selections=2, key="eq_m")
-    with col_e2:
-        eq_qeq = st.multiselect("Pareja para ¿Quién es Quién? (2 jugadores)", jugadores, max_selections=2, key="eq_q")
-        eq_c4 = st.multiselect("Pareja para Conecta 4 (2 jugadores)", jugadores, key="eq_c")
+    # --- JENGA ---
+    st.subheader("🪵 Jenga")
+    col_j1, col_j2 = st.columns(2)
+    with col_j1:
+        jenga_p1 = st.multiselect("Pareja 1 (Jenga)", jugadores, max_selections=2, key="j_p1")
+    with col_j2:
+        jenga_p2 = st.multiselect("Pareja 2 (Jenga)", jugadores, max_selections=2, key="j_p2")
+
+    # --- MEMOTEST ---
+    st.subheader("🧠 Memotest")
+    col_m1, col_m2 = st.columns(2)
+    with col_m1:
+        memo_p1 = st.multiselect("Pareja 1 (Memotest)", jugadores, max_selections=2, key="m_p1")
+    with col_m2:
+        memo_p2 = st.multiselect("Pareja 2 (Memotest)", jugadores, max_selections=2, key="m_p2")
+
+    # --- ¿QUIÉN ES QUIÉN? ---
+    st.subheader("🕵️ ¿Quién es Quién?")
+    col_q1, col_q2 = st.columns(2)
+    with col_q1:
+        qeq_p1 = st.multiselect("Pareja 1 (QEQ)", jugadores, max_selections=2, key="q_p1")
+    with col_q2:
+        qeq_p2 = st.multiselect("Pareja 2 (QEQ)", jugadores, max_selections=2, key="q_p2")
+
+    # --- CONECTA 4 ---
+    st.subheader("🔴 Conecta 4")
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        c4_p1 = st.multiselect("Pareja 1 (Conecta 4)", jugadores, max_selections=2, key="c_p1")
+    with col_c2:
+        c4_p2 = st.multiselect("Pareja 2 (Conecta 4)", jugadores, max_selections=2, key="c_p2")
 
     st.markdown("---")
-    st.markdown("Paso 2: Predice los ganadores y perdedores de estos enfrentamientos en la 1ª Ronda:")
 
-    # Validamos que los equipos estén completos para habilitar las selecciones de ganadores/perdedores
-    if len(eq_jenga) == 2 and len(eq_memo) == 2 and len(eq_qeq) == 2 and len(eq_c4) == 2:
+    # Validamos que todas las parejas tengan exactamente 2 integrantes
+    parejas_completas = (
+        len(jenga_p1) == 2 and len(jenga_p2) == 2 and
+        len(memo_p1) == 2 and len(memo_p2) == 2 and
+        len(qeq_p1) == 2 and len(qeq_p2) == 2 and
+        len(c4_p1) == 2 and len(c4_p2) == 2
+    )
+
+    if parejas_completas:
+        # Validar que no se repita ninguna persona en distintas parejas
+        todas_las_parejas = jenga_p1 + jenga_p2 + memo_p1 + memo_p2 + qeq_p1 + qeq_p2 + c4_p1 + c4_p2
         
-        col_d1, col_d2 = st.columns(2)
-        with col_d1:
-            g_jenga = st.selectbox("Ganador Jenga", eq_jenga, key="gj")
-            g_memo = st.selectbox("Ganador Memotest", eq_memo, key="gm")
-            g_qeq = st.selectbox("Ganador ¿Quién es Quién?", eq_qeq, key="gq")
-            g_c4 = st.selectbox("Ganador Conecta 4", eq_c4, key="gc4")
-        with col_d2:
-            # El perdedor es automáticamente el otro miembro de la pareja
-            p_jenga = [j for j in eq_jenga if j != g_jenga][0]
-            st.info(f"Perdedor Jenga: **{p_jenga}**")
+        if len(todas_las_parejas) != len(set(todas_las_parejas)):
+            st.warning("⚠️ Hay jugadores repetidos entre los enfrentamientos. Cada jugador debe pertenecer a una sola pareja en toda la fase.")
+        else:
+            st.markdown("### 🏆 Paso 2: Selecciona las 4 parejas ganadoras de la 1ª Ronda")
             
-            p_memo = [j for j in eq_memo if j != g_memo][0]
-            st.info(f"Perdedor Memotest: **{p_memo}**")
-            
-            p_qeq = [j for j in eq_qeq if j != g_qeq][0]
-            st.info(f"Perdedor ¿Quién es Quién?: **{p_qeq}**")
-            
-            p_c4 = [j for j in eq_c4 if j != g_c4][0]
-            st.info(f"Perdedor Conecta 4: **{p_c4}**")
+            col_g1, col_g2 = st.columns(2)
+            with col_g1:
+                ganador_jenga = st.selectbox("Ganador Jenga", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{jenga_p1[0]} & {jenga_p1[1]}" if x == "Pareja 1" else f"{jenga_p2[0]} & {jenga_p2[1]}", key="gj_select")
+                ganador_memo = st.selectbox("Ganador Memotest", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{memo_p1[0]} & {memo_p1[1]}" if x == "Pareja 1" else f"{memo_p2[0]} & {memo_p2[1]}", key="gm_select")
+            with col_g2:
+                ganador_qeq = st.selectbox("Ganador ¿Quién es Quién?", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{qeq_p1[0]} & {qeq_p1[1]}" if x == "Pareja 1" else f"{qeq_p2[0]} & {qeq_p2[1]}", key="gq_select")
+                ganador_c4 = st.selectbox("Ganador Conecta 4", ["Pareja 1", "Pareja 2"], format_func=lambda x: f"{c4_p1[0]} & {c4_p1[1]}" if x == "Pareja 1" else f"{c4_p2[0]} & {c4_p2[1]}", key="gc4_select")
 
-        st.markdown("---")
-        st.markdown("### 🔄 2ª Ronda de Duelos (Cruces)")
-        
-        col_c1, col_c2 = st.columns(2)
-        with col_c1:
-            st.markdown("**Jenga:** Ganador QEQ vs Ganador Memo")
-            r_jenga = st.selectbox("Ganador de este cruce de Jenga", [g_qeq, g_memo], key="rj")
-            
-            st.markdown("**Conecta 4:** Perdedor QEQ vs Perdedor Memo")
-            r_c4 = st.selectbox("Ganador de este cruce de Conecta 4", [p_qeq, p_memo], key="rc4")
-        with col_c2:
-            st.markdown("**Memotest:** Ganador Jenga vs Ganador C4")
-            r_memo = st.selectbox("Ganador de este cruce de Memotest", [g_jenga, g_c4], key="rm")
-            
-            st.markdown("**¿Quién es Quién?:** Perdedor Jenga vs Perdedor C4")
-            r_qeq = st.selectbox("Ganador de este cruce de QEQ", [p_jenga, p_c4], key="rq")
+            # Definir ganadores y perdedores individuales para los cruces de la Ronda 2
+            g_jenga_pareja = jenga_p1 if ganador_jenga == "Pareja 1" else jenga_p2
+            p_jenga_pareja = jenga_p2 if ganador_jenga == "Pareja 1" else jenga_p1
 
-        if st.button("Siguiente ➡️"):
-            # Validación para asegurar que no se repitan jugadores en los ganadores de cruces si aplica
-            todos_equipos = eq_jenga + eq_memo + eq_qeq + eq_c4
-            if len(todos_equipos) != len(set(todos_equipos)):
-                st.warning("⚠️ Hay jugadores repetidos entre los distintos equipos de 2vs2. Cada jugador debe estar en un solo equipo.")
-            else:
+            g_memo_pareja = memo_p1 if ganador_memo == "Pareja 1" else memo_p2
+            p_memo_pareja = memo_p2 if ganador_memo == "Pareja 1" else memo_p1
+
+            g_qeq_pareja = qeq_p1 if ganador_qeq == "Pareja 1" else qeq_p2
+            p_qeq_pareja = qeq_p2 if ganador_qeq == "Pareja 1" else qeq_p1
+
+            g_c4_pareja = c4_p1 if ganador_c4 == "Pareja 1" else c4_p2
+            p_c4_pareja = c4_p2 if ganador_c4 == "Pareja 1" else c4_p1
+
+            st.markdown("---")
+            st.markdown("### 🔄 2ª Ronda de Duelos (Cruces individuales o entre ganadores/perdedores)")
+            st.markdown("Elige a un representante o ganador de cada cruce de la Ronda 2:")
+
+            col_c1, col_c2 = st.columns(2)
+            with col_c1:
+                st.markdown("**Jenga:** Ganador QEQ vs Ganador Memotest")
+                opciones_j = g_qeq_pareja + g_memo_pareja
+                r_jenga = st.selectbox("¿Quién avanza/gana?", opciones_j, key="rj")
+                
+                st.markdown("**Conecta 4:** Perdedor QEQ vs Perdedor Memotest")
+                opciones_c4 = p_qeq_pareja + p_memo_pareja
+                r_c4 = st.selectbox("¿Quién avanza/gana?", opciones_c4, key="rc4")
+            with col_c2:
+                st.markdown("**Memotest:** Ganador Jenga vs Ganador Conecta 4")
+                opciones_m = g_jenga_pareja + g_c4_pareja
+                r_memo = st.selectbox("¿Quién avanza/gana?", opciones_m, key="rm")
+                
+                st.markdown("**¿Quién es Quién?:** Perdedor Jenga vs Perdedor Conecta 4")
+                opciones_q = p_jenga_pareja + p_c4_pareja
+                r_qeq = st.selectbox("¿Quién avanza/gana?", opciones_q, key="rq")
+
+            if st.button("Siguiente ➡️"):
                 # Otorgamos puntos por los cruces ganados en la ronda 2
                 for ganador_cruce in [r_jenga, r_c4, r_memo, r_qeq]:
                     if ganador_cruce: puntos[ganador_cruce] += 3
                 st.session_state["paso"] = 3
                 st.rerun()
     else:
-        st.warning("⚠️ Por favor, completa exactamente 2 jugadores en cada uno de los 4 equipos para continuar.")
+        st.info("ℹ️ Completa exactamente 2 integrantes en cada una de las 8 parejas para desbloquear las selecciones de ganadores y la Ronda 2.")
 
 # ==========================================
 # PASO 3: TIC TAC Y DÍGALO CON MÍMICA
