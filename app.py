@@ -202,7 +202,8 @@ elif st.session_state["paso"] == 5:
     disponibles_c = [j for j in disponibles_b if j not in eq_b]
     eq_c = st.multiselect("Equipo C (4 jugadores):", disponibles_c, max_selections=4, key="eq_c")
     
-    disponibles_d = [j for j in disponibles_c if j not in eq_d]
+    # CORREGIDO: Se filtra correctamente con disponibles_c y eq_c
+    disponibles_d = [j for j in disponibles_c if j not in eq_c]
     eq_d = st.multiselect("Equipo D (4 jugadores):", disponibles_d, max_selections=4, key="eq_d")
 
     st.markdown("---")
@@ -247,7 +248,6 @@ elif st.session_state["paso"] == 5:
                 st.rerun()
     else:
         st.info("ℹ️ Asigna exactamente 4 integrantes distintos a cada uno de los 4 equipos para que aparezca la opción de elegir el podio.")
-
 # ==========================================
 # PASO 6: EN UNA NOTA Y CORTE DE FASE 1
 # ==========================================
