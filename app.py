@@ -88,24 +88,40 @@ elif st.session_state["paso"] == 3:
     st.header("3️⃣ Fase Regular: Duelos 2vs2")
     st.markdown("Arma los 4 enfrentamientos (Pareja A vs Pareja B) para cada juego. (Los jugadores seleccionados en cualquier campo se bloquean automáticamente en los demás):")
 
-    # Recolectamos todas las selecciones actuales para filtrar dinámicamente
-    j_p1 = st.multiselect("Pareja 1 (Jenga)", jugadores, max_selections=2, key="j_p1")
-    j_p2 = st.multiselect("Pareja 2 (Jenga)", [j for j in jugadores if j not in j_p1], max_selections=2, key="j_p2")
+    # Obtenemos los estados actuales de las selecciones para filtrar de forma cruzada
+    val_jp1 = st.session_state.get("j_p1", [])
+    val_jp2 = st.session_state.get("j_p2", [])
+    val_mp1 = st.session_state.get("m_p1", [])
+    val_mp2 = st.session_state.get("m_p2", [])
+    val_qp1 = st.session_state.get("q_p1", [])
+    val_qp2 = st.session_state.get("q_p2", [])
+    val_cp1 = st.session_state.get("c_p1", [])
+    val_cp2 = st.session_state.get("c_p2", [])
+
+    # Recolectamos todo lo usado EXCEPTO lo que pertenece al campo actual
+    opc_jp1 = [j for j in jugadores if j not in val_jp2 + val_mp1 + val_mp2 + val_qp1 + val_qp2 + val_cp1 + val_cp2]
+    j_p1 = st.multiselect("Pareja 1 (Jenga)", opc_jp1, max_selections=2, key="j_p1")
+
+    opc_jp2 = [j for j in jugadores if j not in j_p1 + val_mp1 + val_mp2 + val_qp1 + val_qp2 + val_cp1 + val_cp2]
+    j_p2 = st.multiselect("Pareja 2 (Jenga)", opc_jp2, max_selections=2, key="j_p2")
     
-    usados_jenga = j_p1 + j_p2
-    memo_p1 = st.multiselect("Pareja 1 (Memotest)", [j for j in jugadores if j not in usados_jenga], max_selections=2, key="m_p1")
-    usados_memo1 = usados_jenga + memo_p1
-    memo_p2 = st.multiselect("Pareja 2 (Memotest)", [j for j in jugadores if j not in usados_memo1], max_selections=2, key="m_p2")
+    opc_mp1 = [j for j in jugadores if j not in j_p1 + j_p2 + val_mp2 + val_qp1 + val_qp2 + val_cp1 + val_cp2]
+    memo_p1 = st.multiselect("Pareja 1 (Memotest)", opc_mp1, max_selections=2, key="m_p1")
+
+    opc_mp2 = [j for j in jugadores if j not in j_p1 + j_p2 + memo_p1 + val_qp1 + val_qp2 + val_cp1 + val_cp2]
+    memo_p2 = st.multiselect("Pareja 2 (Memotest)", opc_mp2, max_selections=2, key="m_p2")
     
-    usados_memo = usados_memo1 + memo_p2
-    qeq_p1 = st.multiselect("Pareja 1 (¿Quién es Quién?)", [j for j in jugadores if j not in usados_memo], max_selections=2, key="q_p1")
-    usados_qeq1 = usados_memo + qeq_p1
-    qeq_p2 = st.multiselect("Pareja 2 (¿Quién es Quién?)", [j for j in jugadores if j not in usados_qeq1], max_selections=2, key="q_p2")
+    opc_qp1 = [j for j in jugadores if j not in j_p1 + j_p2 + memo_p1 + memo_p2 + val_qp2 + val_cp1 + val_cp2]
+    qeq_p1 = st.multiselect("Pareja 1 (¿Quién es Quién?)", opc_qp1, max_selections=2, key="q_p1")
+
+    opc_qp2 = [j for j in jugadores if j not in j_p1 + j_p2 + memo_p1 + memo_p2 + qeq_p1 + val_cp1 + val_cp2]
+    qeq_p2 = st.multiselect("Pareja 2 (¿Quién es Quién?)", opc_qp2, max_selections=2, key="q_p2")
     
-    usados_qeq = usados_qeq1 + qeq_p2
-    c4_p1 = st.multiselect("Pareja 1 (Conecta 4)", [j for j in jugadores if j not in usados_qeq], max_selections=2, key="c_p1")
-    usados_c41 = usados_qeq + c4_p1
-    c4_p2 = st.multiselect("Pareja 2 (Conecta 4)", [j for j in jugadores if j not in usados_c41], max_selections=2, key="c_p2")
+    opc_cp1 = [j for j in jugadores if j not in j_p1 + j_p2 + memo_p1 + memo_p2 + qeq_p1 + qeq_p2 + val_cp2]
+    c4_p1 = st.multiselect("Pareja 1 (Conecta 4)", opc_cp1, max_selections=2, key="c_p1")
+
+    opc_cp2 = [j for j in jugadores if j not in j_p1 + j_p2 + memo_p1 + memo_p2 + qeq_p1 + qeq_p2 + c4_p1]
+    c4_p2 = st.multiselect("Pareja 2 (Conecta 4)", opc_cp2, max_selections=2, key="c_p2")
 
     st.markdown("---")
 
@@ -166,11 +182,9 @@ elif st.session_state["paso"] == 3:
             r_qeq = p_jenga_pareja if r_qeq_eleccion == opciones_qeq_r2[0] else p_c4_pareja
 
         if st.button("Siguiente ➡️"):
-            # Sumamos puntos Ronda 1 (+2 a cada integrante)
             for pareja in [g_jenga_pareja, g_memo_pareja, g_qeq_pareja, g_c4_pareja]:
                 for jugador in pareja:
                     puntos[jugador] += 2
-            # Sumamos puntos Ronda 2 (+2 a cada integrante)
             for pareja in [r_jenga, r_c4, r_memo, r_qeq]:
                 for jugador in pareja:
                     puntos[jugador] += 2
@@ -186,15 +200,22 @@ elif st.session_state["paso"] == 3:
 elif st.session_state["paso"] == 4:
     st.header("4️⃣ Fase Regular: Tic Tac")
     
-    tt_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="tt1")
-    tt_2 = st.selectbox("2º Lugar (+2 pts)", [None] + jugadores, key="tt2")
-    tt_3 = st.selectbox("3º Lugar (+1 pt)", [None] + jugadores, key="tt3")
+    val_tt1 = st.session_state.get("tt1", None)
+    val_tt2 = st.session_state.get("tt2", None)
+    val_tt3 = st.session_state.get("tt3", None)
+    
+    op_tt1 = [j for j in jugadores if j != val_tt2 and j != val_tt3]
+    tt_1 = st.selectbox("1º Lugar (+3 pts)", [None] + op_tt1, key="tt1")
+    
+    op_tt2 = [j for j in jugadores if j != tt_1 and j != val_tt3]
+    tt_2 = st.selectbox("2º Lugar (+2 pts)", [None] + op_tt2, key="tt2")
+    
+    op_tt3 = [j for j in jugadores if j != tt_1 and j != tt_2]
+    tt_3 = st.selectbox("3º Lugar (+1 pt)", [None] + op_tt3, key="tt3")
 
     if st.button("Siguiente ➡️"):
         if not tt_1 or not tt_2 or not tt_3:
             st.warning("⚠️ Completa los tres puestos.")
-        elif hay_repetidos(tt_1, tt_2, tt_3):
-            st.warning("⚠️ No puedes repetir jugadores en el podio.")
         else:
             puntos[tt_1] += 3; puntos[tt_2] += 2; puntos[tt_3] += 1
             st.session_state["paso"] = 5
@@ -207,22 +228,25 @@ elif st.session_state["paso"] == 5:
     st.header("5️⃣ Fase Regular: Dígalo con Mímica")
     st.markdown("Arma los 4 equipos de 4 jugadores cada uno. (Los jugadores seleccionados se bloquean automáticamente en los demás equipos):")
 
-    # Selección en cascada para filtrar automáticamente a los ya elegidos
-    eq_a = st.multiselect("Equipo A (4 jugadores):", jugadores, max_selections=4, key="eq_a")
+    val_eqa = st.session_state.get("eq_a", [])
+    val_eqb = st.session_state.get("eq_b", [])
+    val_eqc = st.session_state.get("eq_c", [])
+    val_eqd = st.session_state.get("eq_d", [])
+
+    op_eqa = [j for j in jugadores if j not in val_eqb + val_eqc + val_eqd]
+    eq_a = st.multiselect("Equipo A (4 jugadores):", op_eqa, max_selections=4, key="eq_a")
     
-    disponibles_b = [j for j in jugadores if j not in eq_a]
-    eq_b = st.multiselect("Equipo B (4 jugadores):", disponibles_b, max_selections=4, key="eq_b")
+    op_eqb = [j for j in jugadores if j not in eq_a + val_eqc + val_eqd]
+    eq_b = st.multiselect("Equipo B (4 jugadores):", op_eqb, max_selections=4, key="eq_b")
     
-    disponibles_c = [j for j in disponibles_b if j not in eq_b]
-    eq_c = st.multiselect("Equipo C (4 jugadores):", disponibles_c, max_selections=4, key="eq_c")
+    op_eqc = [j for j in jugadores if j not in eq_a + eq_b + val_eqd]
+    eq_c = st.multiselect("Equipo C (4 jugadores):", op_eqc, max_selections=4, key="eq_c")
     
-    # CORREGIDO: Se filtra correctamente con disponibles_c y eq_c
-    disponibles_d = [j for j in disponibles_c if j not in eq_c]
-    eq_d = st.multiselect("Equipo D (4 jugadores):", disponibles_d, max_selections=4, key="eq_d")
+    op_eqd = [j for j in jugadores if j not in eq_a + eq_b + eq_c]
+    eq_d = st.multiselect("Equipo D (4 jugadores):", op_eqd, max_selections=4, key="eq_d")
 
     st.markdown("---")
 
-    # Verificamos si los 4 equipos tienen exactamente 4 integrantes cada uno
     equipos_completos = (
         len(eq_a) == 4 and 
         len(eq_b) == 4 and 
@@ -234,14 +258,18 @@ elif st.session_state["paso"] == 5:
         st.markdown("### 🏆 Selecciona los puestos de los equipos")
         
         nombres_equipos = ["Equipo A", "Equipo B", "Equipo C", "Equipo D"]
+        val_m1 = st.session_state.get("mimica_p1", None)
+        val_m2 = st.session_state.get("mimica_p2", None)
+        val_m3 = st.session_state.get("mimica_p3", None)
+
+        op_m1 = [e for e in nombres_equipos if e != val_m2 and e != val_m3]
+        eq_1_podio = st.selectbox("1º Puesto (+3 pts c/u):", [None] + op_m1, key="mimica_p1")
         
-        eq_1_podio = st.selectbox("1º Puesto (+3 pts c/u):", [None] + nombres_equipos, key="mimica_p1")
+        op_m2 = [e for e in nombres_equipos if e != eq_1_podio and e != val_m3]
+        eq_2_podio = st.selectbox("2º Puesto (+2 pts c/u):", [None] + op_m2, key="mimica_p2")
         
-        opciones_p2 = [e for e in nombres_equipos if e != eq_1_podio]
-        eq_2_podio = st.selectbox("2º Puesto (+2 pts c/u):", [None] + opciones_p2, key="mimica_p2")
-        
-        opciones_p3 = [e for e in opciones_p2 if e != eq_2_podio]
-        eq_3_podio = st.selectbox("3º Puesto (+1 pt c/u):", [None] + opciones_p3, key="mimica_p3")
+        op_m3 = [e for e in nombres_equipos if e != eq_1_podio and e != eq_2_podio]
+        eq_3_podio = st.selectbox("3º Puesto (+1 pt c/u):", [None] + op_m3, key="mimica_p3")
 
         dic_equipos = {
             "Equipo A": eq_a,
@@ -262,25 +290,33 @@ elif st.session_state["paso"] == 5:
                 st.rerun()
     else:
         st.info("ℹ️ Asigna exactamente 4 integrantes distintos a cada uno de los 4 equipos para que aparezca la opción de elegir el podio.")
+
 # ==========================================
 # PASO 6: EN UNA NOTA Y CORTE DE FASE 1
 # ==========================================
 elif st.session_state["paso"] == 6:
     st.header("6️⃣ Fase Regular: En Una Nota")
     
-    n_1 = st.selectbox("1º Lugar (+5 pts)", [None] + jugadores, key="n1")
+    val_n1 = st.session_state.get("n1", None)
+    val_n2 = st.session_state.get("n2", None)
+    val_n3 = st.session_state.get("n3", None)
+    val_n4 = st.session_state.get("n4", None)
+    val_n5 = st.session_state.get("n5", None)
+
+    op_n1 = [j for j in jugadores if j != val_n2 and j != val_n3 and j != val_n4 and j != val_n5]
+    n_1 = st.selectbox("1º Lugar (+5 pts)", [None] + op_n1, key="n1")
     
-    opciones_n2 = [j for j in jugadores if j != n_1]
-    n_2 = st.selectbox("2º Lugar (+4 pts)", [None] + opciones_n2, key="n2")
+    op_n2 = [j for j in jugadores if j != n_1 and j != val_n3 and j != val_n4 and j != val_n5]
+    n_2 = st.selectbox("2º Lugar (+4 pts)", [None] + op_n2, key="n2")
     
-    opciones_n3 = [j for j in opciones_n2 if j != n_2]
-    n_3 = st.selectbox("3º Lugar (+3 pts)", [None] + opciones_n3, key="n3")
+    op_n3 = [j for j in jugadores if j != n_1 and j != n_2 and j != val_n4 and j != val_n5]
+    n_3 = st.selectbox("3º Lugar (+3 pts)", [None] + op_n3, key="n3")
     
-    opciones_n4 = [j for j in opciones_n3 if j != n_3]
-    n_4 = st.selectbox("4º Lugar (+2 pts)", [None] + opciones_n4, key="n4")
+    op_n4 = [j for j in jugadores if j != n_1 and j != n_2 and j != n_3 and j != val_n5]
+    n_4 = st.selectbox("4º Lugar (+2 pts)", [None] + op_n4, key="n4")
     
-    opciones_n5 = [j for j in opciones_n4 if j != n_4]
-    n_5 = st.selectbox("5º Lugar (+1 pt)", [None] + opciones_n5, key="n5")
+    op_n5 = [j for j in jugadores if j != n_1 and j != n_2 and j != n_3 and j != n_4]
+    n_5 = st.selectbox("5º Lugar (+1 pt)", [None] + op_n5, key="n5")
 
     if st.button("📊 Calcular Puntos y Ver Tabla de Fase 1"):
         if not n_1 or not n_2 or not n_3 or not n_4 or not n_5:
@@ -340,11 +376,18 @@ elif st.session_state["paso"] == 7:
     top_8 = st.session_state["top_8"]
     st.header("7️⃣ Fase 2: Tuttifrutti")
     
-    tf_1 = st.selectbox("1º Tuttifrutti (+3 pts)", [None] + top_8, key="tf1")
-    opciones_tf2 = [j for j in top_8 if j != tf_1]
-    tf_2 = st.selectbox("2º Tuttifrutti (+2 pts)", [None] + opciones_tf2, key="tf2")
-    opciones_tf3 = [j for j in opciones_tf2 if j != tf_2]
-    tf_3 = st.selectbox("3º Tuttifrutti (+1 pt)", [None] + opciones_tf3, key="tf3")
+    val_tf1 = st.session_state.get("tf1", None)
+    val_tf2 = st.session_state.get("tf2", None)
+    val_tf3 = st.session_state.get("tf3", None)
+
+    op_tf1 = [j for j in top_8 if j != val_tf2 and j != val_tf3]
+    tf_1 = st.selectbox("1º Tuttifrutti (+3 pts)", [None] + op_tf1, key="tf1")
+    
+    op_tf2 = [j for j in top_8 if j != tf_1 and j != val_tf3]
+    tf_2 = st.selectbox("2º Tuttifrutti (+2 pts)", [None] + op_tf2, key="tf2")
+    
+    op_tf3 = [j for j in top_8 if j != tf_1 and j != tf_2]
+    tf_3 = st.selectbox("3º Tuttifrutti (+1 pt)", [None] + op_tf3, key="tf3")
 
     if st.button("Siguiente ➡️"):
         if not tf_1 or not tf_2 or not tf_3:
@@ -361,11 +404,18 @@ elif st.session_state["paso"] == 8:
     top_8 = st.session_state["top_8"]
     st.header("8️⃣ Fase 2: Barquito")
     
-    bar_1 = st.selectbox("1º Barquito (+3 pts)", [None] + top_8, key="bar1")
-    opciones_bar2 = [j for j in top_8 if j != bar_1]
-    bar_2 = st.selectbox("2º Barquito (+2 pts)", [None] + opciones_bar2, key="bar2")
-    opciones_bar3 = [j for j in opciones_bar2 if j != bar_2]
-    bar_3 = st.selectbox("3º Barquito (+1 pt)", [None] + opciones_bar3, key="bar3")
+    val_bar1 = st.session_state.get("bar1", None)
+    val_bar2 = st.session_state.get("bar2", None)
+    val_bar3 = st.session_state.get("bar3", None)
+
+    op_bar1 = [j for j in top_8 if j != val_bar2 and j != val_bar3]
+    bar_1 = st.selectbox("1º Barquito (+3 pts)", [None] + op_bar1, key="bar1")
+    
+    op_bar2 = [j for j in top_8 if j != bar_1 and j != val_bar3]
+    bar_2 = st.selectbox("2º Barquito (+2 pts)", [None] + op_bar2, key="bar2")
+    
+    op_bar3 = [j for j in top_8 if j != bar_1 and j != bar_2]
+    bar_3 = st.selectbox("3º Barquito (+1 pt)", [None] + op_bar3, key="bar3")
 
     if st.button("Siguiente ➡️"):
         if not bar_1 or not bar_2 or not bar_3:
@@ -382,15 +432,26 @@ elif st.session_state["paso"] == 9:
     top_8 = st.session_state["top_8"]
     st.header("9️⃣ Fase 2: Juicio Matemático")
     
-    jm_1 = st.selectbox("1º Juicio Matemático (+5 pts)", [None] + top_8, key="jm1")
-    opciones_jm2 = [j for j in top_8 if j != jm_1]
-    jm_2 = st.selectbox("2º Juicio Matemático (+4 pts)", [None] + opciones_jm2, key="jm2")
-    opciones_jm3 = [j for j in opciones_jm2 if j != jm_2]
-    jm_3 = st.selectbox("3º Juicio Matemático (+3 pts)", [None] + opciones_jm3, key="jm3")
-    opciones_jm4 = [j for j in opciones_jm3 if j != jm_3]
-    jm_4 = st.selectbox("4º Juicio Matemático (+2 pts)", [None] + opciones_jm4, key="jm4")
-    opciones_jm5 = [j for j in opciones_jm4 if j != jm_4]
-    jm_5 = st.selectbox("5º Juicio Matemático (+1 pt)", [None] + opciones_jm5, key="jm5")
+    val_jm1 = st.session_state.get("jm1", None)
+    val_jm2 = st.session_state.get("jm2", None)
+    val_jm3 = st.session_state.get("jm3", None)
+    val_jm4 = st.session_state.get("jm4", None)
+    val_jm5 = st.session_state.get("jm5", None)
+
+    op_jm1 = [j for j in top_8 if j != val_jm2 and j != val_jm3 and j != val_jm4 and j != val_jm5]
+    jm_1 = st.selectbox("1º Juicio Matemático (+5 pts)", [None] + op_jm1, key="jm1")
+    
+    op_jm2 = [j for j in top_8 if j != jm_1 and j != val_jm3 and j != val_jm4 and j != val_jm5]
+    jm_2 = st.selectbox("2º Juicio Matemático (+4 pts)", [None] + op_jm2, key="jm2")
+    
+    op_jm3 = [j for j in top_8 if j != jm_1 and j != jm_2 and j != val_jm4 and j != val_jm5]
+    jm_3 = st.selectbox("3º Juicio Matemático (+3 pts)", [None] + op_jm3, key="jm3")
+    
+    op_jm4 = [j for j in top_8 if j != jm_1 and j != jm_2 and j != jm_3 and j != val_jm5]
+    jm_4 = st.selectbox("4º Juicio Matemático (+2 pts)", [None] + op_jm4, key="jm4")
+    
+    op_jm5 = [j for j in top_8 if j != jm_1 and j != jm_2 and j != jm_3 and j != jm_4]
+    jm_5 = st.selectbox("5º Juicio Matemático (+1 pt)", [None] + op_jm5, key="jm5")
 
     if st.button("Siguiente ➡️"):
         if not jm_1 or not jm_2 or not jm_3 or not jm_4 or not jm_5:
@@ -407,11 +468,18 @@ elif st.session_state["paso"] == 10:
     top_8 = st.session_state["top_8"]
     st.header("🔟 Fase 2: UNO No Mercy")
     
-    u_1 = st.selectbox("1º UNO No Mercy (+3 pts)", [None] + top_8, key="u1")
-    opciones_u2 = [j for j in top_8 if j != u_1]
-    u_2 = st.selectbox("2º UNO No Mercy (+2 pts)", [None] + opciones_u2, key="u2")
-    opciones_u3 = [j for j in opciones_u2 if j != u_2]
-    u_3 = st.selectbox("3º UNO No Mercy (+1 pt)", [None] + opciones_u3, key="u3")
+    val_u1 = st.session_state.get("u1", None)
+    val_u2 = st.session_state.get("u2", None)
+    val_u3 = st.session_state.get("u3", None)
+
+    op_u1 = [j for j in top_8 if j != val_u2 and j != val_u3]
+    u_1 = st.selectbox("1º UNO No Mercy (+3 pts)", [None] + op_u1, key="u1")
+    
+    op_u2 = [j for j in top_8 if j != u_1 and j != val_u3]
+    u_2 = st.selectbox("2º UNO No Mercy (+2 pts)", [None] + op_u2, key="u2")
+    
+    op_u3 = [j for j in top_8 if j != u_1 and j != u_2]
+    u_3 = st.selectbox("3º UNO No Mercy (+1 pt)", [None] + op_u3, key="u3")
 
     if st.button("📊 Ver Tabla General y Definir Semifinalistas"):
         if not u_1 or not u_2 or not u_3:
