@@ -29,13 +29,19 @@ puntos = st.session_state["puntos"]
 if st.session_state["paso"] == 1:
     st.header("1️⃣ Fase Regular: Capi Dice")
     
-    c_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="c1")
+    # Obtenemos los valores actuales de los selectores para filtrar los demás
+    val_c1 = st.session_state.get("c1", None)
+    val_c2 = st.session_state.get("c2", None)
+    val_c3 = st.session_state.get("c3", None)
     
-    opciones_c2 = [j for j in jugadores if j != c_1]
-    c_2 = st.selectbox("2º Lugar (+2 pts)", [None] + opciones_c2, key="c2")
+    opciones_1 = [j for j in jugadores if j != val_c2 and j != val_c3]
+    c_1 = st.selectbox("1º Lugar (+3 pts)", [None] + opciones_1, key="c1")
     
-    opciones_c3 = [j for j in opciones_c2 if j != c_2]
-    c_3 = st.selectbox("3º Lugar (+1 pt)", [None] + opciones_c3, key="c3")
+    opciones_2 = [j for j in jugadores if j != c_1 and j != val_c3]
+    c_2 = st.selectbox("2º Lugar (+2 pts)", [None] + opciones_2, key="c2")
+    
+    opciones_3 = [j for j in jugadores if j != c_1 and j != c_2]
+    c_3 = st.selectbox("3º Lugar (+1 pt)", [None] + opciones_3, key="c3")
 
     if st.button("Siguiente ➡️"):
         if not c_1 or not c_2 or not c_3:
@@ -53,12 +59,17 @@ if st.session_state["paso"] == 1:
 elif st.session_state["paso"] == 2:
     st.header("2️⃣ Fase Regular: Bingo")
     
-    b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", [None] + jugadores, key="b1")
+    val_b1 = st.session_state.get("b1", None)
+    val_b2 = st.session_state.get("b2", None)
+    val_b3 = st.session_state.get("b3", None)
     
-    opciones_b2 = [j for j in jugadores if j != b_1]
+    opciones_b1 = [j for j in jugadores if j != val_b2 and j != val_b3]
+    b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", [None] + opciones_b1, key="b1")
+    
+    opciones_b2 = [j for j in jugadores if j != b_1 and j != val_b3]
     b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", [None] + opciones_b2, key="b2")
     
-    opciones_b3 = [j for j in opciones_b2 if j != b_2]
+    opciones_b3 = [j for j in jugadores if j != b_1 and j != b_2]
     b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", [None] + opciones_b3, key="b3")
 
     if st.button("Siguiente ➡️"):
