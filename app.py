@@ -26,18 +26,20 @@ puntos = st.session_state["puntos"]
 # ==========================================
 # PASO 1: CAPI DICE
 # ==========================================
-if st.session_state["paso"] == 1:
+elif st.session_state["paso"] == 1:
     st.header("1️⃣ Fase Regular: Capi Dice")
     
     c_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="c1")
-    c_2 = st.selectbox("2º Lugar (+2 pts)", [None] + jugadores, key="c2")
-    c_3 = st.selectbox("3º Lugar (+1 pt)", [None] + jugadores, key="c3")
+    
+    opciones_c2 = [j for j in jugadores if j != c_1]
+    c_2 = st.selectbox("2º Lugar (+2 pts)", [None] + opciones_c2, key="c2")
+    
+    opciones_c3 = [j for j in opciones_c2 if j != c_2]
+    c_3 = st.selectbox("3º Lugar (+1 pt)", [None] + opciones_c3, key="c3")
 
     if st.button("Siguiente ➡️"):
         if not c_1 or not c_2 or not c_3:
             st.warning("⚠️ Por favor completa todos los puestos.")
-        elif hay_repetidos(c_1, c_2, c_3):
-            st.warning("⚠️ No puedes repetir jugadores en el podio.")
         else:
             puntos[c_1] += 3
             puntos[c_2] += 2
@@ -52,14 +54,16 @@ elif st.session_state["paso"] == 2:
     st.header("2️⃣ Fase Regular: Bingo")
     
     b_1 = st.selectbox("1º Ganador Bingo (+3 pts)", [None] + jugadores, key="b1")
-    b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", [None] + jugadores, key="b2")
-    b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", [None] + jugadores, key="b3")
+    
+    opciones_b2 = [j for j in jugadores if j != b_1]
+    b_2 = st.selectbox("2º Ganador Bingo (+3 pts)", [None] + opciones_b2, key="b2")
+    
+    opciones_b3 = [j for j in opciones_b2 if j != b_2]
+    b_3 = st.selectbox("3º Ganador Bingo (+3 pts)", [None] + opciones_b3, key="b3")
 
     if st.button("Siguiente ➡️"):
         if not b_1 or not b_2 or not b_3:
             st.warning("⚠️ Por favor completa todos los ganadores.")
-        elif hay_repetidos(b_1, b_2, b_3):
-            st.warning("⚠️ No puedes repetir jugadores en Bingo.")
         else:
             puntos[b_1] += 3
             puntos[b_2] += 3
