@@ -191,40 +191,33 @@ elif st.session_state["paso"] == 4:
 # ==========================================
 elif st.session_state["paso"] == 5:
     st.header("5️⃣ Fase Regular: Dígalo con Mímica")
+    st.markdown("Arma los 4 equipos de 4 jugadores cada uno. (Los jugadores seleccionados se bloquean automáticamente en los demás equipos):")
+
+    # Selección en cascada para filtrar automáticamente a los ya elegidos
+    eq_a = st.multiselect("Equipo A (4 jugadores):", jugadores, max_selections=4, key="eq_a")
     
-    # Verificamos si ya armaron los equipos o si estamos en la fase de podio
-    if "mimica_fase_podio" not in st.session_state:
-        st.session_state["mimica_fase_podio"] = False
+    disponibles_b = [j for j in jugadores if j not in eq_a]
+    eq_b = st.multiselect("Equipo B (4 jugadores):", disponibles_b, max_selections=4, key="eq_b")
+    
+    disponibles_c = [j for j in disponibles_b if j not in eq_b]
+    eq_c = st.multiselect("Equipo C (4 jugadores):", disponibles_c, max_selections=4, key="eq_c")
+    
+    disponibles_d = [j for j in disponibles_c if j not in eq_d]
+    eq_d = st.multiselect("Equipo D (4 jugadores):", disponibles_d, max_selections=4, key="eq_d")
 
-    if not st.session_state["mimica_fase_podio"]:
-        st.markdown("### 👥 Armado de Equipos (4 equipos de 4 jugadores)")
-        
-        eq_a = st.multiselect("Equipo A (Máx. 4 jugadores):", jugadores, max_selections=4, key="eq_a")
-        
-        disponibles_b = [j for j in jugadores if j not in eq_a]
-        eq_b = st.multiselect("Equipo B (Máx. 4 jugadores):", disponibles_b, max_selections=4, key="eq_b")
-        
-        disponibles_c = [j for j in disponibles_b if j not in eq_b]
-        eq_c = st.multiselect("Equipo C (Máx. 4 jugadores):", disponibles_c, max_selections=4, key="eq_c")
-        
-        disponibles_d = [j for j in disponibles_c if j not in eq_c]
-        eq_d = st.multiselect("Equipo D (Máx. 4 jugadores):", disponibles_d, max_selections=4, key="eq_d")
+    st.markdown("---")
 
-        if st.button("Siguiente: Definir Podio ➡️"):
-            if len(eq_a) != 4 or len(eq_b) != 4 or len(eq_c) != 4 or len(eq_d) != 4:
-                st.warning("⚠️ Cada uno de los 4 equipos debe tener exactamente 4 jugadores.")
-            else:
-                # Guardamos los equipos en la sesión
-                st.session_state["mimica_equipos"] = {
-                    "Equipo A": eq_a,
-                    "Equipo B": eq_b,
-                    "Equipo C": eq_c,
-                    "Equipo D": eq_d
-                }
-                st.session_state["mimica_fase_podio"] = True
-                st.rerun()
-    else:
-        st.markdown("### 🏆 Resultados de Dígalo con Mímica")
+    # Verificamos si los 4 equipos tienen exactamente 4 integrantes cada uno
+    equipos_completos = (
+        len(eq_a) == 4 and 
+        len(eq_b) == 4 and 
+        len(eq_c) == 4 and 
+        len(eq_d) == 4
+    )
+
+    if equipos_completos:
+        st.markdown("### 🏆 Selecciona los puestos de los equipos")
+        
         nombres_equipos = ["Equipo A", "Equipo B", "Equipo C", "Equipo D"]
         
         eq_1_podio = st.selectbox("1º Puesto (+3 pts c/u):", [None] + nombres_equipos, key="mimica_p1")
@@ -235,29 +228,25 @@ elif st.session_state["paso"] == 5:
         opciones_p3 = [e for e in opciones_p2 if e != eq_2_podio]
         eq_3_podio = st.selectbox("3º Puesto (+1 pt c/u):", [None] + opciones_p3, key="mimica_p3")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("⬅️ Volver a armar equipos"):
-                st.session_state["mimica_fase_podio"] = False
+        dic_equipos = {
+            "Equipo A": eq_a,
+            "Equipo B": eq_b,
+            "Equipo C": eq_c,
+            "Equipo D": eq_d
+        }
+
+        if st.button("Siguiente ➡️"):
+            if not eq_1_podio or not eq_2_podio or not eq_3_podio:
+                st.warning("⚠️ Completa los puestos del podio.")
+            else:
+                for m in dic_equipos[eq_1_podio]: puntos[m] += 3
+                for m in dic_equipos[eq_2_podio]: puntos[m] += 2
+                for m in dic_equipos[eq_3_podio]: puntos[m] += 1
+                
+                st.session_state["paso"] = 6
                 st.rerun()
-        with col2:
-            if st.button("Siguiente ➡️", key="btn_sig_mimica"):
-                if not eq_1_podio or not eq_2_podio or not eq_3_podio:
-                    st.warning("⚠️ Completa los puestos del podio.")
-                else:
-                    equipos = st.session_state["mimica_equipos"]
-                    
-                    # Sumamos puntos a los integrantes de cada equipo según su puesto
-                    for m in equipos[eq_1_podio]: puntos[m] += 3
-                    for m in equipos[eq_2_podio]: puntos[m] += 2
-                    for m in equipos[eq_3_podio]: puntos[m] += 1
-                    
-                    # Limpiamos las variables temporales de mímica para la próxima
-                    del st.session_state["mimica_fase_podio"]
-                    del st.session_state["mimica_equipos"]
-                    
-                    st.session_state["paso"] = 6
-                    st.rerun()
+    else:
+        st.info("ℹ️ Asigna exactamente 4 integrantes distintos a cada uno de los 4 equipos para que aparezca la opción de elegir el podio.")
 
 # ==========================================
 # PASO 6: EN UNA NOTA Y CORTE DE FASE 1
