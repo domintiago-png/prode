@@ -26,7 +26,7 @@ puntos = st.session_state["puntos"]
 # ==========================================
 # PASO 1: CAPI DICE
 # ==========================================
-elif st.session_state["paso"] == 1:
+if st.session_state["paso"] == 1:
     st.header("1️⃣ Fase Regular: Capi Dice")
     
     c_1 = st.selectbox("1º Lugar (+3 pts)", [None] + jugadores, key="c1")
@@ -70,7 +70,6 @@ elif st.session_state["paso"] == 2:
             puntos[b_3] += 3
             st.session_state["paso"] = 3
             st.rerun()
-
 # ==========================================
 # PASO 3: DUELOS 2VS2 (8 PAREJAS / 2 RONDAS CON FILTRADO BIDIRECCIONAL)
 # ==========================================
